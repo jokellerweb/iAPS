@@ -1,23 +1,43 @@
-name: Test MATCH_PASSWORD
+name: iAPS TestFlight Build
 
 on:
-  workflow_dispatch: # manuell auslösbar
+  workflow_dispatch: # manuell startbar
 
 jobs:
-  test-match:
+  build:
     runs-on: macos-latest
     steps:
+      # 1️⃣ Repo auschecken
       - name: Checkout Repo
         uses: actions/checkout@v3
 
-      - name: Install Dependencies
+      # 2️⃣ Ruby & Bundler installieren
+      - name: Install Bundler
         run: |
           gem install bundler
           bundle install
 
+      # 3️⃣ Match: Zertifikate erzeugen / prüfen
+      - name: Run Fastlane Match
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FASTLANE_KEY: ${{ secrets.FASTLANE_KEY }}
+          FASTLANE_KEY_ID: ${{ secrets.FASTLANE_KEY_ID }}
+          FASTLANE_ISSUER_ID: ${{ secrets.FASTLANE_ISSUER_ID }}
+          TEAMID: ${{ secrets.TEAMID }}
+        run: |
+          # Erstmalig: Zertifikate erzeugen
+          bundle exec fastlane match appstore
+
+      # 4️⃣ Optional: nur prüfen (readonly)
       - name: Test Match Password
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           bundle exec fastlane match appstore --readonly
+
+      # 5️⃣ Build / TestFlight (Fastlane Lane)
+      - name: Build & Upload to TestFlight
+        env:
