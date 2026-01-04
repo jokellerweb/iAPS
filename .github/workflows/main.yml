@@ -1,0 +1,23 @@
+name: Test MATCH_PASSWORD
+
+on:
+  workflow_dispatch: # manuell auslösbar
+
+jobs:
+  test-match:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Test Match Password
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          bundle exec fastlane match appstore --readonly
